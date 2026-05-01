@@ -2,6 +2,10 @@ package com.sstransport.controller;
 
 import com.sstransport.model.Trip;
 import com.sstransport.repository.TripRepository;
+import com.sstransport.repository.EmployeeRepository;
+import com.sstransport.repository.VehicleRepository;
+import com.sstransport.dto.TripDetailDTO;
+import com.sstransport.model.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime; // ✅ FIXED
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -16,6 +21,12 @@ public class TripController {
 
     @Autowired
     private TripRepository tripRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
     // Get all trips
     @GetMapping
@@ -151,5 +162,179 @@ public class TripController {
         }
         tripRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Get all trips with driver/helper names and roles
+    @GetMapping("/details")
+    public List<TripDetailDTO> getAllTripsWithCrew() {
+        List<Trip> trips = tripRepository.findAll();
+        List<TripDetailDTO> result = new ArrayList<>();
+
+        for (Trip t : trips) {
+            Integer driverId = t.getDriverId();
+            String driverName = null;
+            String driverRole = null;
+            String driverImage = null;
+            if (driverId != null) {
+                Optional<Employee> d = employeeRepository.findById(driverId);
+                if (d.isPresent()) {
+                    driverName = d.get().getName();
+                    driverRole = d.get().getRole();
+                    driverImage = d.get().getImage();
+                }
+            }
+
+            Integer helperId = t.getHelperId();
+            String helperName = null;
+            String helperRole = null;
+            String helperImage = null;
+            if (helperId != null) {
+                Optional<Employee> h = employeeRepository.findById(helperId);
+                if (h.isPresent()) {
+                    helperName = h.get().getName();
+                    helperRole = h.get().getRole();
+                    helperImage = h.get().getImage();
+                }
+            }
+
+            String vehicleReg = null;
+            Integer vehicleId = t.getVehicleId();
+            if (vehicleId != null) {
+                Optional<com.sstransport.model.Vehicle> v = vehicleRepository.findById(vehicleId);
+                if (v.isPresent()) vehicleReg = v.get().getRegNumber();
+            }
+
+            TripDetailDTO dto = new TripDetailDTO(
+                    t.getId(),
+                    t.getDate(),
+                    t.getPickupDest(),
+                    t.getDropDest(),
+                    t.getClientName(),
+                    t.getClientContact(),
+                    driverId, driverName, driverRole, driverImage,
+                    helperId, helperName, helperRole, helperImage,
+                    t.getVehicleId(), vehicleReg, t.getStatus(), t.getFare(), t.getGoodsType()
+            );
+
+            result.add(dto);
+        }
+
+        return result;
+    }
+
+    // Get trip details (driver/helper names, roles, images and vehicle reg) by trip id
+    @GetMapping("/details/{id}")
+    public ResponseEntity<TripDetailDTO> getTripDetailsById(@PathVariable Integer id) {
+        Optional<Trip> optionalTrip = tripRepository.findById(id);
+        if (!optionalTrip.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Trip t = optionalTrip.get();
+
+        Integer driverId = t.getDriverId();
+        String driverName = null;
+        String driverRole = null;
+        String driverImage = null;
+        if (driverId != null) {
+            Optional<Employee> d = employeeRepository.findById(driverId);
+            if (d.isPresent()) {
+                driverName = d.get().getName();
+                driverRole = d.get().getRole();
+                driverImage = d.get().getImage();
+            }
+        }
+
+        Integer helperId = t.getHelperId();
+        String helperName = null;
+        String helperRole = null;
+        String helperImage = null;
+        if (helperId != null) {
+            Optional<Employee> h = employeeRepository.findById(helperId);
+            if (h.isPresent()) {
+                helperName = h.get().getName();
+                helperRole = h.get().getRole();
+                helperImage = h.get().getImage();
+            }
+        }
+
+        String vehicleReg = null;
+        Integer vehicleId = t.getVehicleId();
+        if (vehicleId != null) {
+            Optional<com.sstransport.model.Vehicle> v = vehicleRepository.findById(vehicleId);
+            if (v.isPresent()) vehicleReg = v.get().getRegNumber();
+        }
+
+        TripDetailDTO dto = new TripDetailDTO(
+                t.getId(),
+                t.getDate(),
+                t.getPickupDest(),
+                t.getDropDest(),
+                t.getClientName(),
+                t.getClientContact(),
+                driverId, driverName, driverRole, driverImage,
+                helperId, helperName, helperRole, helperImage,
+                t.getVehicleId(), vehicleReg, t.getStatus(), t.getFare(), t.getGoodsType()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
+
+    // Get recent 3 trips (details) for a vehicle
+    @GetMapping("/vehicle/{vehicleId}/recent")
+    public List<TripDetailDTO> getRecentTripsByVehicleId(@PathVariable Integer vehicleId) {
+        List<Trip> trips = tripRepository.findTop3ByVehicleIdOrderByDateDesc(vehicleId);
+        List<TripDetailDTO> result = new ArrayList<>();
+
+        for (Trip t : trips) {
+            Integer driverId = t.getDriverId();
+            String driverName = null;
+            String driverRole = null;
+            String driverImage = null;
+            if (driverId != null) {
+                Optional<Employee> d = employeeRepository.findById(driverId);
+                if (d.isPresent()) {
+                    driverName = d.get().getName();
+                    driverRole = d.get().getRole();
+                    driverImage = d.get().getImage();
+                }
+            }
+
+            Integer helperId = t.getHelperId();
+            String helperName = null;
+            String helperRole = null;
+            String helperImage = null;
+            if (helperId != null) {
+                Optional<Employee> h = employeeRepository.findById(helperId);
+                if (h.isPresent()) {
+                    helperName = h.get().getName();
+                    helperRole = h.get().getRole();
+                    helperImage = h.get().getImage();
+                }
+            }
+
+            String vehicleReg = null;
+            Integer vId = t.getVehicleId();
+            if (vId != null) {
+                Optional<com.sstransport.model.Vehicle> v = vehicleRepository.findById(vId);
+                if (v.isPresent()) vehicleReg = v.get().getRegNumber();
+            }
+
+            TripDetailDTO dto = new TripDetailDTO(
+                    t.getId(),
+                    t.getDate(),
+                    t.getPickupDest(),
+                    t.getDropDest(),
+                    t.getClientName(),
+                    t.getClientContact(),
+                    driverId, driverName, driverRole, driverImage,
+                    helperId, helperName, helperRole, helperImage,
+                    t.getVehicleId(), vehicleReg, t.getStatus(), t.getFare(), t.getGoodsType()
+            );
+
+            result.add(dto);
+        }
+
+        return result;
     }
 }

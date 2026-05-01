@@ -33,4 +33,7 @@ public interface TripRepository extends JpaRepository<Trip, Integer> {
 
     // ✅ EXTRA (useful)
     List<Trip> findByDateBetween(LocalDateTime start, LocalDateTime end);
+
+    // Get 3 most recent trips for a vehicle
+    List<Trip> findTop3ByVehicleIdOrderByDateDesc(Integer vehicleId);
 }

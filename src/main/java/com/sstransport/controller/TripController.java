@@ -280,6 +280,64 @@ public class TripController {
         return ResponseEntity.ok(dto);
     }
 
+    // Get trip details (driver/helper names, roles, images and vehicle reg) by status
+    @GetMapping("/details/status/{status}")
+    public List<TripDetailDTO> getTripDetailsByStatus(@PathVariable String status) {
+        List<Trip> trips = tripRepository.findByStatus(status);
+        List<TripDetailDTO> result = new ArrayList<>();
+
+        for (Trip t : trips) {
+            Integer driverId = t.getDriverId();
+            String driverName = null;
+            String driverRole = null;
+            String driverImage = null;
+            if (driverId != null) {
+                Optional<Employee> d = employeeRepository.findById(driverId);
+                if (d.isPresent()) {
+                    driverName = d.get().getName();
+                    driverRole = d.get().getRole();
+                    driverImage = d.get().getImage();
+                }
+            }
+
+            Integer helperId = t.getHelperId();
+            String helperName = null;
+            String helperRole = null;
+            String helperImage = null;
+            if (helperId != null) {
+                Optional<Employee> h = employeeRepository.findById(helperId);
+                if (h.isPresent()) {
+                    helperName = h.get().getName();
+                    helperRole = h.get().getRole();
+                    helperImage = h.get().getImage();
+                }
+            }
+
+            String vehicleReg = null;
+            Integer vehicleId = t.getVehicleId();
+            if (vehicleId != null) {
+                Optional<com.sstransport.model.Vehicle> v = vehicleRepository.findById(vehicleId);
+                if (v.isPresent()) vehicleReg = v.get().getRegNumber();
+            }
+
+            TripDetailDTO dto = new TripDetailDTO(
+                    t.getId(),
+                    t.getDate(),
+                    t.getPickupDest(),
+                    t.getDropDest(),
+                    t.getClientName(),
+                    t.getClientContact(),
+                    driverId, driverName, driverRole, driverImage,
+                    helperId, helperName, helperRole, helperImage,
+                    t.getVehicleId(), vehicleReg, t.getStatus(), t.getFare(), t.getGoodsType()
+            );
+
+            result.add(dto);
+        }
+
+        return result;
+    }
+
     // Get recent 3 trips (details) for a vehicle
     @GetMapping("/vehicle/{vehicleId}/recent")
     public List<TripDetailDTO> getRecentTripsByVehicleId(@PathVariable Integer vehicleId) {

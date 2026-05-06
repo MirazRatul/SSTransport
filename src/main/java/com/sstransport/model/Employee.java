@@ -35,12 +35,16 @@ public class Employee {
     @Column(name = "driving_license_img", length = 255)
     private String drivingLicenseImg;
 
-    // Constructors
+    // ✅ NEW FIELD
+    @Column(name = "employee_firebase_uid", length = 60)
+    private String employeeFirebaseUid;
+
     public Employee() {}
 
     public Employee(String name, String image, String contact,
                     String nidNo, String role, String drivingLicenseNo,
-                    String nidPic, String drivingLicenseImg) {
+                    String nidPic, String drivingLicenseImg,
+                    String employeeFirebaseUid) {
         this.name = name;
         this.image = image;
         this.contact = contact;
@@ -49,9 +53,11 @@ public class Employee {
         this.drivingLicenseNo = drivingLicenseNo;
         this.nidPic = nidPic;
         this.drivingLicenseImg = drivingLicenseImg;
+        this.employeeFirebaseUid = employeeFirebaseUid;
     }
 
     // Getters & Setters
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -78,4 +84,13 @@ public class Employee {
 
     public String getDrivingLicenseImg() { return drivingLicenseImg; }
     public void setDrivingLicenseImg(String drivingLicenseImg) { this.drivingLicenseImg = drivingLicenseImg; }
+
+    // ✅ NEW GETTER/SETTER
+    public String getEmployeeFirebaseUid() {
+        return employeeFirebaseUid;
+    }
+
+    public void setEmployeeFirebaseUid(String employeeFirebaseUid) {
+        this.employeeFirebaseUid = employeeFirebaseUid;
+    }
 }

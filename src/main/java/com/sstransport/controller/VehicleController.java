@@ -1,12 +1,14 @@
 package com.sstransport.controller;
 
 import com.sstransport.dto.VehicleCrewDTO;
+
 import com.sstransport.dto.VehicleDetailDTO;
 import com.sstransport.model.Vehicle;
 import com.sstransport.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vehicles")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class VehicleController {
 
     @Autowired

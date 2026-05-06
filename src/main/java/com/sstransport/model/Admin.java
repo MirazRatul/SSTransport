@@ -10,8 +10,8 @@ import jakarta.persistence.Column;
 public class Admin {
 
     @Id
-    @Column(length = 50, nullable = false) // Firebase UID
-    private String id;  
+    @Column(length = 50, nullable = false)
+    private String id; // Firebase UID
 
     @Column(length = 60, nullable = false, unique = true)
     private String email;
@@ -25,18 +25,20 @@ public class Admin {
     @Column(name = "image_url", length = 255, nullable = true)
     private String imageUrl;
 
-    // Constructors
+    @Column(length = 15, nullable = true)
+    private String role;
+
     public Admin() {}
 
-    public Admin(String id, String email, String name, String contact, String imageUrl) {
+    public Admin(String id, String email, String name, String contact, String imageUrl, String role) {
         this.id = id;
         this.email = email;
         this.name = name;
         this.contact = contact;
         this.imageUrl = imageUrl;
+        this.role = role;
     }
 
-    // Getters & Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -51,4 +53,7 @@ public class Admin {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

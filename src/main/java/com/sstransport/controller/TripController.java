@@ -9,14 +9,18 @@ import com.sstransport.model.Employee;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDateTime; // ✅ FIXED
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/trips")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 public class TripController {
 
     @Autowired
@@ -31,7 +35,14 @@ public class TripController {
     // Get all trips
     @GetMapping
     public List<Trip> getAllTrips() {
-        return tripRepository.findAll();
+        // Return only upcoming trips (date >= now), sorted by date asc then time asc
+        LocalDateTime now = LocalDateTime.now();
+        List<Trip> trips = tripRepository.findAll();
+        return trips.stream()
+                .filter(t -> t.getDate() != null && !t.getDate().isBefore(now))
+                .sorted(Comparator.comparing((Trip t) -> t.getDate().toLocalDate())
+                        .thenComparing(t -> t.getDate().toLocalTime()))
+                .collect(Collectors.toList());
     }
 
     // Get trip by ID
@@ -150,6 +161,24 @@ public class TripController {
         if (tripDetails.getFare() != null) trip.setFare(tripDetails.getFare());
         if (tripDetails.getGoodsType() != null) trip.setGoodsType(tripDetails.getGoodsType());
 
+        Trip updatedTrip = tripRepository.save(trip);
+        return ResponseEntity.ok(updatedTrip);
+    }
+
+    // Update only the status of a trip by ID
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Trip> updateTripStatus(@PathVariable Integer id, @RequestParam String status) {
+        Optional<Trip> optionalTrip = tripRepository.findById(id);
+        if (!optionalTrip.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Trip trip = optionalTrip.get();
+        if (status == null || status.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        trip.setStatus(status.trim());
         Trip updatedTrip = tripRepository.save(trip);
         return ResponseEntity.ok(updatedTrip);
     }
@@ -283,9 +312,15 @@ public class TripController {
     // Get trip details (driver/helper names, roles, images and vehicle reg) by status
     @GetMapping("/details/status/{status}")
     public List<TripDetailDTO> getTripDetailsByStatus(@PathVariable String status) {
-        List<Trip> trips = tripRepository.findByStatus(status);
-        List<TripDetailDTO> result = new ArrayList<>();
+        // Return only upcoming trips with given status, sorted by date asc then time asc
+        LocalDateTime now = LocalDateTime.now();
+        List<Trip> trips = tripRepository.findByStatus(status).stream()
+                .filter(t -> t.getDate() != null && !t.getDate().isBefore(now))
+                .sorted(Comparator.comparing((Trip t) -> t.getDate().toLocalDate())
+                        .thenComparing(t -> t.getDate().toLocalTime()))
+                .collect(Collectors.toList());
 
+        List<TripDetailDTO> result = new ArrayList<>();
         for (Trip t : trips) {
             Integer driverId = t.getDriverId();
             String driverName = null;
